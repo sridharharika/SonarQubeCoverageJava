@@ -1,7 +1,7 @@
 name: code coverage workflow using sonarqube
 on: push
 jobs:
-  jon_sonar:
+  job_sonar:
     runs-on: ubuntu-latest
     steps:
       - name: checkout the code on the runner vm.
