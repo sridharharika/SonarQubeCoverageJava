@@ -1,7 +1,8 @@
-name: workflow to build and reviw the code using sonarqube
+name: multi-stage build and code review
 on: push
 jobs:
-  job_maven:
+  build:
+    name: Stage 1 - Build
     runs-on: ubuntu-latest
     steps:
       - name: checkout the code on the runner vm.
@@ -11,11 +12,28 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'  
-      - name: build and review the code using maven
+      - name: build the code using Maven
         run: mvn clean install
-  job_sonar:
+
+  test:
+    name: Stage 2 - Test
     runs-on: ubuntu-latest
-    needs: job_maven
+    needs: build
+    steps:
+      - name: checkout the code on the runner vm.
+        uses: actions/checkout@v7
+      - name: install java
+        uses: actions/setup-java@v6
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: run tests using Maven
+        run: mvn test
+
+  sonar:
+    name: Stage 3 - SonarQube Analysis
+    runs-on: ubuntu-latest
+    needs: test
     steps:
       - name: checkout the code on the runner vm.
         uses: actions/checkout@v7
@@ -24,7 +42,7 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'  
-      - name: code coverage using sonarqube
+      - name: run SonarQube analysis
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=sridharharika_sridharharika-sonarqube -Dsonar.organization=sridharharika -Dsonar.host.url=https://sonarcloud.io -Dsonar.token=$SONAR_TOKEN
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
